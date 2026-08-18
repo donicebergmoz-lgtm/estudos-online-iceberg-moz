@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://donicebergmoz-lgtm.github.io/estudos-online-iceberg-moz/sitemap.xml
