@@ -1,5 +1,36 @@
 plugins { id 'com.android.application' }
 
-android { namespace 'mz.icebergmoz.ruva'; compileSdk 36
-    defaultConfig { applicationId 'mz.icebergmoz.ruva'; minSdk 23; targetSdk 36; versionCode 1; versionName '1.0' }
+android {
+    namespace 'mz.icebergmoz.ruva'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'mz.icebergmoz.ruva'
+        minSdk 23
+        targetSdk 36
+        versionCode 2
+        versionName '1.1'
+    }
+
+    signingConfigs {
+        release {
+            def ks = System.getenv('ANDROID_KEYSTORE_PATH')
+            def storePass = System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            def keyAliasEnv = System.getenv('ANDROID_KEY_ALIAS')
+            def keyPass = System.getenv('ANDROID_KEY_PASSWORD')
+            if (ks && storePass && keyAliasEnv && keyPass) {
+                storeFile file(ks)
+                storePassword storePass
+                keyAlias keyAliasEnv
+                keyPassword keyPass
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
 }
