@@ -1,0 +1,29 @@
+name: Build Iceberg Moz Ruva Android
+on:
+  workflow_dispatch:
+  push:
+    paths: ['app-android/**']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Build debug APK
+        working-directory: app-android
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Build release AAB
+        working-directory: app-android
+        run: gradle :app:bundleRelease --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iceberg-moz-android-builds
+          path: |
+            app-android/app/build/outputs/apk/debug/*.apk
+            app-android/app/build/outputs/bundle/release/*.aab
