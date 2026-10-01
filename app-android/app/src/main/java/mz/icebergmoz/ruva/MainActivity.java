@@ -65,9 +65,21 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         setContentView(webView);
         WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true); s.setDatabaseEnabled(true);
-        s.setAllowFileAccess(true); s.setAllowContentAccess(true); s.setSupportZoom(false);
-        s.setUserAgentString(s.getUserAgentString()+" IcebergMozRuva/1.1");
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
+        s.setAllowFileAccess(true);
+        s.setAllowContentAccess(true);
+        s.setSupportZoom(false);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        s.setUserAgentString(s.getUserAgentString()+" IcebergMozRuva/1.2");
+
+        CookieManager cm = CookieManager.getInstance();
+        cm.setAcceptCookie(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cm.setAcceptThirdPartyCookies(webView, true);
+        }
+
         webView.setBackgroundColor(Color.rgb(247,250,255));
         webView.setWebViewClient(new WebViewClient(){
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r){ return openExternalIfNeeded(r.getUrl().toString()); }
@@ -75,7 +87,8 @@ public class MainActivity extends Activity {
         });
         webView.setWebChromeClient(new WebChromeClient(){
             @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p){
-                if(fileCallback!=null) fileCallback.onReceiveValue(null); fileCallback=cb;
+                if(fileCallback!=null) fileCallback.onReceiveValue(null);
+                fileCallback=cb;
                 try { startActivityForResult(p.createIntent(), FILE_REQUEST); } catch(Exception e){ fileCallback=null; return false; }
                 return true;
             }
@@ -87,7 +100,8 @@ public class MainActivity extends Activity {
     }
 
     private boolean openExternalIfNeeded(String url){
-        Uri u=Uri.parse(url); String host=u.getHost();
+        Uri u=Uri.parse(url);
+        String host=u.getHost();
         if(host==null || host.endsWith("github.io")) return false;
         try { startActivity(new Intent(Intent.ACTION_VIEW,u)); } catch(Exception ignored) {}
         return true;
@@ -98,11 +112,20 @@ public class MainActivity extends Activity {
         if(request==FILE_REQUEST && fileCallback!=null){
             Uri[] r=null;
             if(result==RESULT_OK && data!=null){
-                if(data.getClipData()!=null){ int n=data.getClipData().getItemCount(); r=new Uri[n]; for(int i=0;i<n;i++) r[i]=data.getClipData().getItemAt(i).getUri(); }
-                else if(data.getData()!=null) r=new Uri[]{data.getData()};
+                if(data.getClipData()!=null){
+                    int n=data.getClipData().getItemCount();
+                    r=new Uri[n];
+                    for(int i=0;i<n;i++) r[i]=data.getClipData().getItemAt(i).getUri();
+                } else if(data.getData()!=null) r=new Uri[]{data.getData()};
             }
-            fileCallback.onReceiveValue(r); fileCallback=null;
+            fileCallback.onReceiveValue(r);
+            fileCallback=null;
         }
+    }
+
+    @Override protected void onPause() {
+        CookieManager.getInstance().flush();
+        super.onPause();
     }
 
     @Override public void onBackPressed(){ if(webView!=null && webView.canGoBack()) webView.goBack(); else super.onBackPressed(); }
